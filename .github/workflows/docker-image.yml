@@ -1,0 +1,60 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches:
+      - feat/actions-ci   # testing. replace with main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      COMMIT_SHA: ${{ github.sha }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push API Image
+        run: |
+          COMMIT_SHA=$(git rev-parse --short=8 HEAD)
+          IMAGE_NAME=dograh-api-test
+          docker buildx build \
+            -f api/Dockerfile \
+            --platform linux/amd64,linux/arm64 \
+            --tag chewieee/$IMAGE_NAME:${COMMIT_SHA::8} \
+            --tag chewieee/$IMAGE_NAME:latest \
+            --tag ghcr.io/chewwbaka/$IMAGE_NAME:${COMMIT_SHA::8} \
+            --tag ghcr.io/chewwbaka/$IMAGE_NAME:latest \
+            --push ./api
+
+      - name: Build and Push UI Image
+        run: |
+          COMMIT_SHA=$(git rev-parse --short=8 HEAD)
+          IMAGE_NAME=dograh-ui-test
+          docker buildx build \
+            -f ui/Dockerfile \
+            --platform linux/amd64,linux/arm64 \
+            --tag chewieee/$IMAGE_NAME:${COMMIT_SHA::8} \
+            --tag chewieee/$IMAGE_NAME:latest \
+            --tag ghcr.io/chewwbaka/$IMAGE_NAME:${COMMIT_SHA::8} \
+            --tag ghcr.io/chewwbaka/$IMAGE_NAME:latest \
+            --push ./ui
