@@ -1,0 +1,13 @@
+# Docker Compose Override for Local Development
+# This file automatically provides the pipecat commit SHA when building locally
+# It's automatically merged with docker-compose.yaml
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+      args:
+        # Dynamically get pipecat commit SHA from submodule
+        # This will be evaluated when docker-compose build is run
+        PIPECAT_COMMIT: ${PIPECAT_COMMIT}

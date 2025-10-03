@@ -18,10 +18,15 @@ RUN pip install --user --no-cache-dir -r requirements.txt && \
     # Clean up pip cache after installation
     rm -rf /root/.cache/pip
 
-# Force reinstall of pipecat on every build (cache bust)
+# Accept pipecat commit SHA as build argument
+ARG PIPECAT_COMMIT
+RUN if [ -z "$PIPECAT_COMMIT" ]; then \
+        echo "ERROR: PIPECAT_COMMIT build argument is required" >&2; \
+        exit 1; \
+    fi
 
-ARG CACHEBUST=1
-RUN pip install --user 'git+https://github.com/dograh-hq/pipecat.git@f88c8a0#egg=pipecat-ai[cartesia,deepgram,openai,elevenlabs,groq,google,azure,soundfile,silero,webrtc]' && \
+# Install pipecat using the commit SHA from build argument
+RUN pip install --user "git+https://github.com/dograh-hq/pipecat.git@${PIPECAT_COMMIT}#egg=pipecat-ai[cartesia,deepgram,openai,elevenlabs,groq,google,azure,soundfile,silero,webrtc]" && \
     # Clean up pip cache after pipecat installation
     rm -rf /root/.cache/pip
 

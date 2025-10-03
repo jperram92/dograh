@@ -28,23 +28,14 @@ jobs:
         with:
           submodules: true  # Only for version check, not used in build
 
-      - name: Check pipecat version sync
-        id: version-check
+      - name: Get pipecat commit SHA
+        id: pipecat-version
         run: |
-          chmod +x scripts/check_pipecat_sync.sh
-          
-          # Capture the output for version details
-          if OUTPUT=$(./scripts/check_pipecat_sync.sh 2>&1); then
-            echo "version_mismatch=false" >> $GITHUB_OUTPUT
-          else
-            echo "version_mismatch=true" >> $GITHUB_OUTPUT
-            # Extract version info from the output
-            SUBMODULE_VERSION=$(echo "$OUTPUT" | grep "Submodule commit:" | awk '{print $3}')
-            DOCKERFILE_VERSION=$(echo "$OUTPUT" | grep "Dockerfile commit:" | awk '{print $3}')
-            echo "submodule_version=${SUBMODULE_VERSION}" >> $GITHUB_OUTPUT
-            echo "dockerfile_version=${DOCKERFILE_VERSION}" >> $GITHUB_OUTPUT
-            # Don't fail the build, just note the mismatch
-          fi
+          # Extract the pipecat commit SHA from submodule
+          chmod +x scripts/get_pipecat_commit.sh
+          PIPECAT_COMMIT=$(./scripts/get_pipecat_commit.sh)
+          echo "pipecat_commit=${PIPECAT_COMMIT}" >> $GITHUB_OUTPUT
+          echo "📦 Pipecat commit SHA: ${PIPECAT_COMMIT}"
 
       - name: Set up QEMU  # Enables cross-platform builds (e.g., arm64)
         uses: docker/setup-qemu-action@v3
@@ -89,6 +80,7 @@ jobs:
           # Build and push multi-arch Docker image to DockerHub and GHCR
           docker buildx build \
             -f "$DOCKERFILE" \
+            --build-arg PIPECAT_COMMIT=${{ steps.pipecat-version.outputs.pipecat_commit }} \
             --platform linux/amd64,linux/arm64 \
             --tag ${{ secrets.DOCKERHUB_USERNAME }}/$IMAGE_NAME:$SHORT_SHA \
             --tag ${{ secrets.DOCKERHUB_USERNAME }}/$IMAGE_NAME:latest \
@@ -133,7 +125,7 @@ jobs:
                   "elements": [
                     {
                       "type": "mrkdwn",
-                      "text": "${{ steps.version-check.outputs.version_mismatch == 'true' && format('⚠️ Warning: Pipecat version mismatch detected - <@{0}> <@{1}> please sync versions', secrets.SLACK_DEV1_ID, secrets.SLACK_DEV2_ID) || '✅ Pipecat versions in sync' }}"
+                      "text": "✅ Pipecat commit: `${{ steps.pipecat-version.outputs.pipecat_commit }}`"
                     }
                   ]
                 }
@@ -169,7 +161,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "${{ steps.version-check.outputs.version_mismatch == 'true' && format('*🔴 Pipecat Version Mismatch:*\n• Submodule: `{0}`\n• Dockerfile: `{1}`\n\n_This may have caused the build failure._\n\n<@{2}> <@{3}> Please update api/Dockerfile to use commit {0}', steps.version-check.outputs.submodule_version, steps.version-check.outputs.dockerfile_version, secrets.SLACK_DEV1_ID, secrets.SLACK_DEV2_ID) || '*Failure Reason:* Check workflow logs for details' }}"
+                    "text": "*Failure Reason:* Check workflow logs for details\n*Pipecat commit:* `${{ steps.pipecat-version.outputs.pipecat_commit }}`"
                   }
                 }
               ]
