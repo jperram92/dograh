@@ -157,8 +157,6 @@ class AzureLLMService(BaseLLMConfiguration):
 # Dograh LLM Service
 class DograhLLMModel(str, Enum):
     DEFAULT = "default"
-    FAST = "fast"
-    ACCURATE = "accurate"
 
 
 @register_llm
@@ -281,8 +279,6 @@ class OpenAITTSService(BaseTTSConfiguration):
 # Dograh TTS Service
 class DograhVoice(str, Enum):
     DEFAULT = "default"
-    JOEY = "joey"
-    RACHEL = "rachel"
 
 
 class DograhTTSModel(str, Enum):

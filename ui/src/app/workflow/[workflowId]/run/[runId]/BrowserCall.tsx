@@ -94,7 +94,7 @@ const BrowserCall = ({ workflowId, workflowRunId, accessToken, initialContextVar
         <>
             <Card className="w-full max-w-4xl mx-auto">
                 <CardHeader>
-                    <CardTitle>Call Voice Agent</CardTitle>
+                    <CardTitle>Agent Run</CardTitle>
                 </CardHeader>
 
                 <CardContent>

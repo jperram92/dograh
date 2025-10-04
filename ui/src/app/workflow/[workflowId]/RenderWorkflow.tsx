@@ -5,9 +5,12 @@ import {
     Panel,
     ReactFlow,
 } from "@xyflow/react";
+import { ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
 import WorkflowLayout from '@/app/workflow/WorkflowLayout';
 import { FlowEdge, FlowNode, NodeType } from "@/components/flow/types";
+import { Button } from '@/components/ui/button';
 import { WorkflowConfigurations } from '@/types/workflow-configurations';
 
 import AddNodePanel from "../../../components/flow/AddNodePanel";
@@ -72,6 +75,15 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
         saveWorkflowConfigurations
     } = useWorkflowState({ initialWorkflowName, workflowId, initialFlow, initialTemplateContextVariables, initialWorkflowConfigurations });
 
+    const backButton = (
+        <Link href="/workflow">
+            <Button variant="outline" size="sm" className="flex items-center gap-1">
+                <ArrowLeft className="h-4 w-4" />
+                Workflows
+            </Button>
+        </Link>
+    );
+
     const headerActions = (
         <WorkflowHeader
             workflowValidationErrors={workflowValidationErrors}
@@ -86,7 +98,7 @@ function RenderWorkflow({ initialWorkflowName, workflowId, initialFlow, initialT
 
     return (
         <WorkflowProvider value={{ saveWorkflow }}>
-            <WorkflowLayout headerActions={headerActions} showFeaturesNav={false}>
+            <WorkflowLayout headerActions={headerActions} backButton={backButton} showFeaturesNav={false}>
                 <div className="h-[calc(100vh-80px)]">
                     <ReactFlow
                         nodes={nodes}
